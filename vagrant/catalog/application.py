@@ -38,7 +38,7 @@ def showLogin():
     return render_template('login.html', STATE=state)
 
 
-
+#species JSON
 @app.route('/species.json')
 def speciesJSON():
     species = session.query(Category).all()
@@ -54,7 +54,7 @@ def speciesJSON():
     return jsonify(Species=specieslist)
 
 
-# Show all restaurants
+# Show all Species & recent members
 @app.route('/')
 @app.route('/species/')
 def showSpecies():
@@ -67,7 +67,7 @@ def showSpecies():
 
 
 
-
+#show members that are part of a certain species
 @app.route('/<string:species>/Members/')
 def showMembers(species):
     l =  session.query(Category).order_by(asc(Category.name))
@@ -80,65 +80,67 @@ def showMembers(species):
         return render_template('members.html', members=members, species=s, specieslist = l)
 
 
-# Create a new  item
-@app.route('/<string:species>/new/', methods=['GET', 'POST'])
-def newMember(species):
+# Create a new  member
+@app.route('/newmember/', methods=['GET', 'POST'])
+def newMember():
     if 'username' not in login_session:
         return redirect('/login')
-        s = session.query(Category).filter_by(name=species).one()
-        if request.method == 'POST':
-            newItem = Item(name=request.form['name'], description=request.form['description'],  category_id=s.id, user_id=login_session['user_id'])
-            session.add(newItem)
-            session.commit()
-            flash('New Member %s  Successfully Created' % (newItem.name))
-            return redirect(url_for('showMembers', species=species))
+        
+    if request.method == 'POST':
+        s = session.query(Category).filter_by(name=request.form['species']).one()
+        newItem = Item(name=request.form['name'], description=request.form['description'],  category_id=s.id, user_id=login_session['user_id'])
+        session.add(newItem)
+        session.commit()
+        flash('New Member %s  Successfully Created' % (newItem.name))
+        return redirect(url_for('showSpecies'))
     else:
+        species = session.query(Category).order_by(asc(Category.name))
         return render_template('newmember.html', species=species)
 
-# Edit an  item
-@app.route('/<string:species>/<string:member>/edit', methods=['GET', 'POST'])
-def editMember(species, member):
+# Edit a member
+@app.route('/<string:member>/edit', methods=['GET', 'POST'])
+def editMember(member):
     if 'username' not in login_session:
         return redirect('/login')
-    editedItem = session.query(MenuItem).filter_by(name=member).one()
-    s = session.query(Category).filter_by(inamed=species).one()
-    if login_session['user_id'] != restaurant.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to edit menu items to this restaurant. Please create your own restaurant in order to edit items.');}</script><body onload='myFunction()'>"
+    m = session.query(Item).filter_by(name=member).one()    
+    if login_session['user_id'] != m.user_id:
+        flash('You are not authorized to edit Member %s  . You can only edit members you created.' % (m.name))
+        return redirect(url_for('showSpecies'))
+    species = session.query(Category).order_by(asc(Category.name))
     if request.method == 'POST':
         if request.form['name']:
-            editedItem.name = request.form['name']
+            m.name = request.form['name']
         if request.form['description']:
-            editedItem.description = request.form['description']
-        if request.form['price']:
-            editedItem.price = request.form['price']
-        if request.form['course']:
-            editedItem.course = request.form['course']
-        session.add(editedItem)
+            m.description = request.form['description']
+        if request.form['species']:
+            s = session.query(Category).filter_by(name=request.form['species']).one()
+            m.category_id = s.id
+        session.add(m)
         session.commit()
-        flash('Menu Item Successfully Edited')
-        return redirect(url_for('showMenu', restaurant_id=restaurant_id))
+        flash('Member %s  Successfully Edited' % (m.name))
+        return redirect(url_for('showSpecies'))
     else:
-        return render_template('editmenuitem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=editedItem)
+        return render_template('editmember.html', member=m, species=species)
 
 
-# Delete an item
-@app.route('/<string:species>/<string:member>/delete', methods=['GET', 'POST'])
-def deleteMember(restaurant_id, menu_id):
+# Delete a member
+@app.route('/<string:member>/delete', methods=['GET', 'POST'])
+def deleteMember(member):
     if 'username' not in login_session:
         return redirect('/login')
-    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
-    itemToDelete = session.query(MenuItem).filter_by(id=menu_id).one()
-    if login_session['user_id'] != restaurant.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to delete menu items to this restaurant. Please create your own restaurant in order to delete items.');}</script><body onload='myFunction()'>"
+    m = session.query(Item).filter_by(name=member).one()
+    if login_session['user_id'] != m.user_id:
+        flash('You are not authorized to delete Member %s  . You can only delete members you created.' % (m.name))
+        return redirect(url_for('showSpecies'))
     if request.method == 'POST':
-        session.delete(itemToDelete)
+        session.delete(m)
         session.commit()
-        flash('Menu Item Successfully Deleted')
-        return redirect(url_for('showMenu', restaurant_id=restaurant_id))
+        flash('Member %s  Successfully Deleted' % (m.name))
+        return redirect(url_for('showSpecies'))
     else:
-        return render_template('deleteMenuItem.html', item=itemToDelete)
+        return render_template('deletemember.html', member=m)
 
-
+#oauth connect with Google
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -230,7 +232,7 @@ def gconnect():
     print "done!"
     return output
 
-
+#User helper functions
 def createUser(login_session):
     newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
@@ -253,8 +255,6 @@ def getUserID(email):
         return None
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
-
-
 @app.route('/gdisconnect')
 def gdisconnect():
     # Only disconnect a connected user.
