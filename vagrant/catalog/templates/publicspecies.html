@@ -24,7 +24,7 @@
 	<a href = "{{url_for('showMembers', species = s.name)}}">
 			<div class="row">
 				<div class="col-md-1"></div>
-					<div class="col-md-10 restaurant-list">
+					<div class="col-md-10 species-list">
 						<h3>{{s.name}}</h3>
 					</div>
 				<div class="col-md-1"></div>
@@ -40,8 +40,12 @@
 
 			<div class="row">
 				<div class="col-md-1"></div>
-					<div class="col-md-10 restaurant-list">
-						<h3>{{m.name}}</h3>
+					<div class="col-md-10 species-list">
+							{% for s in species %}
+								{% if s.id == m.category_id %}
+								<h3><a href = "{{url_for('showMember', species = s.name, member=m.name)}}">{{m.name}}({{s.name}})</a></h3>
+								{% endif %}
+							{% endfor %}
 					</div>
 				<div class="col-md-1"></div>
 			</div>

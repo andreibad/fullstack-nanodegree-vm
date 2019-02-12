@@ -23,7 +23,7 @@ session = DBSession()
 
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
-APPLICATION_NAME = "Restaurant Menu Application"
+APPLICATION_NAME = "Andrei's Application"
 
 
 
@@ -79,6 +79,15 @@ def showMembers(species):
     else:
         return render_template('members.html', members=members, species=s, specieslist = l)
 
+#show member info
+@app.route('/<string:species>/<string:member>/')
+def showMember(species,member):
+    s = session.query(Category).filter_by(name=species).all()
+    m = session.query(Item).filter_by(name=member).one()
+    if 'username' not in login_session:
+        return render_template('publicmember.html', member=m, species=s)
+    else:
+        return render_template('member.html', member=m, species=s)
 
 # Create a new  member
 @app.route('/newmember/', methods=['GET', 'POST'])
@@ -185,8 +194,8 @@ def gconnect():
     # Verify that the access token is valid for this app.
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
-            json.dumps("Token's client ID does not match app's."), 401)
-        print "Token's client ID does not match app's."
+                                 json.dumps("Token's client ID does not match app's."), 401)
+        print( "Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -229,7 +238,7 @@ def gconnect():
     output += login_session['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
-    print "done!"
+    print ("done!")
     return output
 
 #User helper functions

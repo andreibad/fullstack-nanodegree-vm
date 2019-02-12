@@ -61,7 +61,7 @@ h3 {
 	color: #9FB80A;;
 }
 .btn:hover {
-	border-color: #9FB80A;
+	border-color: rgb(79, 79, 107);
 }
 .btn.delete {
 	border-color: #aaaaaa;
@@ -74,15 +74,15 @@ h3 {
 .glyphicon {
 	margin-right: 10px;
 }
-.top-menu {
+.top-member {
 	padding-top: 30px;
 	padding-bottom: 30px;
 }
-.top-menu p {
+.top-member p {
 	margin-bottom: 0;
 	line-height: 16px;
 }
-.top-menu a {
+.top-member a {
 	margin-bottom: 0;
 	line-height: 16px;
 	font-size: 16px;
@@ -104,7 +104,7 @@ h3 {
 	background-repeat: no-repeat;
 	background-size: cover;
 }
-.banner.menu {
+.banner.member {
 	height: 150px;
 	background-color: #E1E17F;
 }
@@ -115,21 +115,21 @@ h3 {
 .banner h1 {
 	margin: 45px 0;
 }
- .restaurant-list {
+ .species-list {
  	background-color: #F0F0F0;
  	padding: 20px;
-u }
- .restaurant-list:hover {
- 	background-color: #e1e17f;
+}
+ .species-list:hover {
+ 	background-color: rgb(187, 188, 204);
  	padding: 20px;
 }
-.menu-item {
+.member-item {
 	background: #F0F0F0;
 	padding: 20px;
 	margin: 20px;
 	margin-left: -20px;
 }
-.menu-price {
+.member-price {
 	font-weight: 700;
 }
 .creator {

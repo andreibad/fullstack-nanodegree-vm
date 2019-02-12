@@ -2,39 +2,48 @@
 {% block content %}
 {% include "header.html" %}
 	
-<h3>Edit Member</h3>
+<h3> Member</h3>
+
 
 	<div class="row">
 		<div class="col-md-6 col-md-offset-1 padding-top">
 			<form action="#" method = "post">
 				<div class="form-group">
-					<label for="name">Name:</label>
-					<input type ="text" maxlength="50" class="form-control" name="name" value="{{member.name}}">
-
-					<label for="description">Description:</label>
-					<textarea class="form-control" maxlength="250" rows="3" name="description" >{{member.description}}</textarea>
-<P></P>
-					<label for="price">Species:</label>
+					<label for="name"><h3>Name:</h3> </label> {{member.name}}<br>
+					<label for="description"><h3>Description:</h3> </label>{{member.description}}<br>
+					<label for="species"><h3>Species:</h3></label>
 					{% for s in species %}
-							<div class="radio">
+
 								{% if s.id == member.category_id %}
 								<label>
-									<input type="radio" name="species" id="{{s.id}}" value="{{s.name}}" checked="checked">{{s.name}} 
-								</label>
-								{% else %}
-								<label>
-									<input type="radio" name="species" id="{{s.id}}" value="{{s.name}}">{{s.name}}
+									{{s.name}} 
 								</label>
 								{% endif %}
-							</div>
+
 					{% endfor %}
 
-
-					<button type="submit" class="btn btn-default" id="submit" type="submit">
-					<span  aria-hidden="true"></span>Submit</button>
 				</div>
 			</form>
 		</div>
 	</div>
+
+
+
+	<div class="row padding-top padding-bottom">
+			<div class="col-md-1"></div>
+				<a href="{{url_for('editMember', member = member.name )}}">
+					<button class="btn btn-default" >
+						<span  aria-hidden="true"></span>Edit Member
+					</button>
+				</a>
+		
+				<a href="{{url_for('deleteMember', member= member.name )}}">
+					<button class="btn btn-default delete" >
+						<span aria-hidden="true"></span>Delete Member
+					</button>
+				</a>
+			</div>
+		</div>
+
 {% endblock %}
 
