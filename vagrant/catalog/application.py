@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import (Flask, render_template, request, redirect, jsonify, url_for,
+                   flash)
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Item, User
@@ -11,10 +12,11 @@ import httplib2
 import json
 from flask import make_response
 import requests
-from pprint import pprint
+
 
 app = Flask(__name__)
-engine = create_engine('sqlite:///catalog.db', connect_args={'check_same_thread':False})
+engine = create_engine('sqlite:///catalog.db',
+                       connect_args={'check_same_thread': False})
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -24,8 +26,6 @@ session = DBSession()
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Andrei's Application"
-
-
 
 
 # Create anti-forgery state token
@@ -38,11 +38,11 @@ def showLogin():
     return render_template('login.html', STATE=state)
 
 
-#species JSON
+# species JSON
 @app.route('/species.json')
 def speciesJSON():
     species = session.query(Category).all()
-    specieslist= []
+    specieslist = []
     for i in species:
         s = i.serialize
         members = session.query(Item).filter_by(category_id=s['id']).all()
@@ -61,33 +61,38 @@ def showSpecies():
     species = session.query(Category).order_by(asc(Category.name))
     members = session.query(Item).order_by(desc(Item.id)).limit(5)
     if 'username' not in login_session:
-        return render_template('publicspecies.html', species=species, members=members)
+        return render_template('publicspecies.html',
+                               species=species, members=members)
     else:
-        return render_template('species.html', species=species, members=members)
+        return render_template('species.html',
+                               species=species, members=members)
 
 
-
-#show members that are part of a certain species
+# show members that are part of a certain species
 @app.route('/<string:species>/Members/')
 def showMembers(species):
-    l =  session.query(Category).order_by(asc(Category.name))
+    cl = session.query(Category).order_by(asc(Category.name))
     s = session.query(Category).filter_by(name=species).one()
     members = session.query(Item).filter_by(
         category_id=s.id).all()
-    if 'username' not in login_session :
-        return render_template('publicmembers.html', members=members, species=s, specieslist = l )
+    if 'username' not in login_session:
+        return render_template('publicmembers.html',
+                               members=members, species=s, specieslist=cl)
     else:
-        return render_template('members.html', members=members, species=s, specieslist = l)
+        return render_template('members.html',
+                               members=members, species=s, specieslist=cl)
 
-#show member info
+
+# show member info
 @app.route('/<string:species>/<string:member>/')
-def showMember(species,member):
+def showMember(species, member):
     s = session.query(Category).filter_by(name=species).all()
     m = session.query(Item).filter_by(name=member).one()
     if 'username' not in login_session:
         return render_template('publicmember.html', member=m, species=s)
     else:
         return render_template('member.html', member=m, species=s)
+
 
 # Create a new  member
 @app.route('/newmember/', methods=['GET', 'POST'])
@@ -96,8 +101,11 @@ def newMember():
         return redirect('/login')
         
     if request.method == 'POST':
-        s = session.query(Category).filter_by(name=request.form['species']).one()
-        newItem = Item(name=request.form['name'], description=request.form['description'],  category_id=s.id, user_id=login_session['user_id'])
+        s = session.query(Category).filter_by(name=request.form
+                                              ['species']).one()
+        newItem = Item(name=request.form['name'],
+                       description=request.form['description'],
+                       category_id=s.id, user_id=login_session['user_id'])
         session.add(newItem)
         session.commit()
         flash('New Member %s  Successfully Created' % (newItem.name))
@@ -106,6 +114,7 @@ def newMember():
         species = session.query(Category).order_by(asc(Category.name))
         return render_template('newmember.html', species=species)
 
+
 # Edit a member
 @app.route('/<string:member>/edit', methods=['GET', 'POST'])
 def editMember(member):
@@ -113,7 +122,8 @@ def editMember(member):
         return redirect('/login')
     m = session.query(Item).filter_by(name=member).one()    
     if login_session['user_id'] != m.user_id:
-        flash('You are not authorized to edit Member %s  . You can only edit members you created.' % (m.name))
+        flash('You are not authorized to edit Member %s  .'
+              'You can only edit members you created.' % (m.name))
         return redirect(url_for('showSpecies'))
     species = session.query(Category).order_by(asc(Category.name))
     if request.method == 'POST':
@@ -122,7 +132,8 @@ def editMember(member):
         if request.form['description']:
             m.description = request.form['description']
         if request.form['species']:
-            s = session.query(Category).filter_by(name=request.form['species']).one()
+            s = session.query(Category).filter_by(name=request.form
+                                                  ['species']).one()
             m.category_id = s.id
         session.add(m)
         session.commit()
@@ -139,7 +150,8 @@ def deleteMember(member):
         return redirect('/login')
     m = session.query(Item).filter_by(name=member).one()
     if login_session['user_id'] != m.user_id:
-        flash('You are not authorized to delete Member %s  . You can only delete members you created.' % (m.name))
+        flash('You are not authorized to delete Member %s  .'
+              'You can only delete members you created.' % (m.name))
         return redirect(url_for('showSpecies'))
     if request.method == 'POST':
         session.delete(m)
@@ -149,7 +161,8 @@ def deleteMember(member):
     else:
         return render_template('deletemember.html', member=m)
 
-#oauth connect with Google
+
+# oauth connect with Google
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -194,16 +207,17 @@ def gconnect():
     # Verify that the access token is valid for this app.
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
-                                 json.dumps("Token's client ID does not match app's."), 401)
-        print( "Token's client ID does not match app's.")
+                                 json.dumps("Token's client ID does not" 
+                                            "match app's."), 401)
+        print("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
 
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(json.dumps('Current user is '
+                                            'already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -236,12 +250,14 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ''' " style = "width: 300px; height: 300px;border-radius: 150px;'
+              -webkit-border-radius: 150px;-moz-border-radius: 150px;"> '''
     flash("you are now logged in as %s" % login_session['username'])
-    print ("done!")
+    print("done!")
     return output
 
-#User helper functions
+
+# User helper functions
 def createUser(login_session):
     newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
@@ -257,11 +273,8 @@ def getUserInfo(user_id):
 
 
 def getUserID(email):
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except:
-        return None
+    return session.query(User).filter_by(email=email).one().id
+
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
 @app.route('/gdisconnect')
@@ -281,7 +294,8 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(json.dumps('''Failed to revoke token for
+                                            given user.''', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -305,8 +319,6 @@ def disconnect():
     else:
         flash("You were not logged in")
         return redirect(url_for('showSpecies'))
-
-
 
 
 if __name__ == '__main__':
