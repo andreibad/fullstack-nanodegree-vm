@@ -12,7 +12,7 @@ import httplib2
 import json
 from flask import make_response
 import requests
-
+from sqlalchemy.orm.exc import NoResultFound
 
 app = Flask(__name__)
 engine = create_engine('sqlite:///catalog.db',
@@ -207,7 +207,7 @@ def gconnect():
     # Verify that the access token is valid for this app.
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
-                                 json.dumps("Token's client ID does not" 
+                                 json.dumps("Token's client ID does not"
                                             "match app's."), 401)
         print("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
@@ -273,7 +273,12 @@ def getUserInfo(user_id):
 
 
 def getUserID(email):
-    return session.query(User).filter_by(email=email).one().id
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        userid = user.id
+        return userid
+    except NoResultFound:
+        return None
 
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
